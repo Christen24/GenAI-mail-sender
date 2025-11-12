@@ -112,12 +112,11 @@ SENDER_EMAIL
 SENDER_PASSWORD
 ```
 
-### 4. Configure `app.py` for Production
-Follow the instructions in `DEPLOYMENT_GUIDE.md` to update your `app.py` file to use your live Render URL.  
-Push this change to GitHub, and Render will automatically redeploy.
-
 ### 5. Configure Google Cloud for Production
 Go back to your Google Cloud Console → Credentials.
 
 Add your live Render URL (e.g., `https://ai-email-app.onrender.com`) to **Authorized JavaScript origins**.  
 Add your callback URL (e.g., `https://ai-email-app.onrender.com/auth-callback`) to **Authorized redirect URIs**.
+
+
+Page link:https://ai-email-assistant-u2tw.onrender.com/
