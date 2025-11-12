@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Email Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons (Feather) -->
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>AI Email Assistant</h1>
+            <p>Compose new emails or reply to existing ones in seconds.</p>
+            
+            <!-- Auth Section -->
+            <div class="auth-container">
+                <button id="login-btn" class="btn-secondary">
+                    <i data-feather="log-in"></i> Sign in with Google
+                </button>
+                <div id="user-info" class="hidden">
+                    <span id="user-name"></span>
+                    <button id="logout-btn" class="btn-secondary">
+                        <i data-feather="log-out"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode">
+                <i data-feather="sun"></i>
+                <i data-feather="moon"></i>
+            </button>
+        </header>
+
+        <!-- Main Form Card (Single Box) -->
+        <main class="card">
+
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+                <button id="compose-tab-btn" class="tab-btn active" data-tab="compose-tab">
+                    <i data-feather="edit-3"></i> Compose
+                </button>
+                <button id="reply-tab-btn" class="tab-btn" data-tab="reply-tab">
+                    <i data-feather="corner-up-left"></i> Reply
+                </button>
+            </div>
+            
+            <form id="email-form">
+                
+                <!-- Tab Content: Compose -->
+                <div id="compose-tab" class="tab-content">
+                    <div class="form-group">
+                        <!-- NEW: Recipient Header -->
+                        <div class="recipient-header">
+                            <label>Recipients</label>
+                            <label for="csv-upload" class="btn-secondary btn-small">
+                                <i data-feather="upload"></i> Upload CSV (Name & Email)
+                            </label>
+                            <!-- NEW: Hidden File Input -->
+                            <input type="file" id="csv-upload" accept=".csv" class="hidden">
+                        </div>
+                        <div id="recipients-list">
+                            <!-- Recipient rows will be dynamically inserted here -->
+                        </div>
+                        <button type="button" id="add-recipient-btn" class="btn-secondary">
+                            <i data-feather="plus"></i> Add Recipient
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="compose-subject">Subject</label>
+                        <input type="text" id="compose-subject" name="compose-subject" placeholder="e.g., Project Update" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="compose-context">Context or Key Points</label>
+                        <textarea id="compose-context" name="compose-context" rows="5" placeholder="e.g., 'Need to ask for a deadline extension...'" required></textarea>
+                    </div>
+                </div>
+                
+                <!-- Tab Content: Reply -->
+                <div id="reply-tab" class="tab-content hidden">
+                    <div class="form-group">
+                        <label for="reply-original">Paste Original Email</label>
+                        <textarea id="reply-original" name="reply-original" rows="7" placeholder="Paste the full email you received here..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reply-context">Your Key Points for the Reply</label>
+                        <textarea id="reply-context" name="reply-context" rows="4" placeholder="e.g., 'Thank them, confirm I'll attend...'"></textarea>
+                    </div>
+                </div>
+
+                <!-- Shared Fields -->
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="tone">Tone of Voice</label>
+                        <select id="tone" name="tone">
+                            <option>Formal</option>
+                            <option>Friendly</option>
+                            <option>Persuasive</option>
+                            <option>Apology</option>
+                            <option>Appreciation</option>
+                            <option>Urgent</option>
+                            <option>Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="custom-tone-wrapper">
+                        <label for="custom-tone">Custom Tone</label>
+                        <input type="text" id="custom-tone" name="custom-tone" placeholder="e.g., 'Excited and enthusiastic'">
+                    </div>
+                </div>
+                
+                <button type="submit" id="generate-btn" class="btn-primary">
+                    <span class="btn-text">Generate Email</span>
+                    <div class="spinner hidden"></div>
+                </button>
+
+                <!-- Generated Section (hidden by default) -->
+                <section id="generated-section" class="hidden">
+                    <hr class="divider">
+                    <!-- Fields for "Reply" mode to auto-fill -->
+                    <div id="reply-fields-wrapper" class="hidden">
+                        <div class="form-group">
+                            <label for="send-subject">Subject</label>
+                            <input type="text" id="send-subject" name="send-subject">
+                        </div>
+                        <div class="form-group">
+                             <!-- NEW: Recipient Header for Reply -->
+                            <div class="recipient-header">
+                                <label>Recipients</label>
+                                <label for="send-csv-upload" class="btn-secondary btn-small">
+                                    <i data-feather="upload"></i> Upload CSV (Name & Email)
+                                </label>
+                                <!-- NEW: Hidden File Input for Reply -->
+                                <input type="file" id="send-csv-upload" accept=".csv" class="hidden">
+                            </div>
+                            <div id="send-recipients-list">
+                                <!-- Recipient rows will be dynamically inserted here -->
+                            </div>
+                            <button type="button" id="add-send-recipient-btn" class="btn-secondary">
+                                <i data-feather="plus"></i> Add Recipient
+                            </button>
+                        </div>
+                    </div>
+                    <!-- End Reply Fields -->
+
+                    <div class="form-group">
+                        <label for="generated-email">Generated Body</label>
+                        <p class="form-hint">You can edit the text below. <strong>[Name]</strong> will be automatically replaced with each recipient's name.</p>
+                        <textarea id="generated-email" rows="15"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <p id="sender-info" class="form-hint">Email will be sent from the app owner.</p>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" id="regenerate-btn" class="btn-secondary">
+                            <span class="btn-text">Regenerate</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                        <button type="button" id="send-btn" class="btn-primary">
+                            <span class="btn-text">Send Email</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                    </div>
+                </section>
+                <!-- End Generated Section -->
+
+            </form>
+        </main>
+    </div>
+
+    <!-- Popup Notification -->
+    <div id="popup" class="popup hidden">
+        <span id="popup-message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Apply Feather Icons
+        feather.replace();
+    </script>
+</body>
+</html>
