@@ -51,14 +51,17 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 # This must match one of the "Authorized redirect URIs" in your Google Cloud console
+
+# --- UPDATED FOR PRODUCTION ---
 # For local testing:
-REDIRECT_URI = "http://127.0.0.1:5000/auth-callback"
+# REDIRECT_URI = "http://127.0.0.1:5000/auth-callback"
 # For production (e.g., Render):
-# REDIRECT_URI = "https://your-app-name.onrender.com/auth-callback" 
+REDIRECT_URI = "https://ai-email-app.onrender.com/auth-callback" # <-- YOUR URL
 
 # This allows OAuth to work on http:// (local development)
 # REMOVE THIS IN PRODUCTION (when using HTTPS)
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # <-- COMMENTED OUT
+# --- END PRODUCTION UPDATE ---
 
 # Scopes: What we are asking the user for permission to do
 SCOPES = [
@@ -75,7 +78,7 @@ client_config = {
         "client_secret": GOOGLE_CLIENT_SECRET,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [REDIRECT_URI],
+        "redirect_uris": [REDIRECT_URI, "http://127.0.0.1:5000/auth-callback"], # Keep both for safety
     }
 }
 
@@ -166,7 +169,12 @@ def generate_email():
 def login():
     """Redirects the user to Google's OAuth 2.0 login page."""
     flow = Flow.from_client_config(client_config, scopes=SCOPES)
-    flow.redirect_uri = REDIRECT_URI
+    # Determine the redirect URI based on the request URL (more robust)
+    if '127.0.0.1' in request.host_url or 'localhost' in request.host_url:
+        flow.redirect_uri = "http://127.0.0.1:5000/auth-callback"
+    else:
+        flow.redirect_uri = REDIRECT_URI # Use the production one
+        
     authorization_url, state = flow.authorization_url(
         access_type='offline',
         prompt='consent', # Use 'consent' to always get a refresh token
@@ -185,7 +193,14 @@ def auth_callback():
         return "Invalid state", 400
 
     flow = Flow.from_client_config(client_config, scopes=SCOPES)
-    flow.redirect_uri = REDIRECT_URI
+    
+    # Determine the redirect URI based on the request URL
+    if '127.0.0.1' in request.host_url or 'localhost' in request.host_url:
+        flow.redirect_uri = "http://127.0.0.1:5000/auth-callback"
+        # Re-enable insecure transport for local http testing
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    else:
+        flow.redirect_uri = REDIRECT_URI # Use the production one
 
     try:
         # Exchange the authorization code for credentials
@@ -215,6 +230,10 @@ def auth_callback():
     except Exception as e:
         print(f"Error during OAuth callback: {e}")
         return redirect(url_for('home')) # Redirect home on error
+    finally:
+        # Clean up insecure transport env var if it was set
+        if 'OAUTHLIB_INSECURE_TRANSPORT' in os.environ:
+            del os.environ['OAUTHLIB_INSECURE_TRANSPORT']
 
     return redirect(url_for('home'))
 
