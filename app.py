@@ -254,7 +254,7 @@ def send_email_smtp():
     NOW PERFORMS A MAIL MERGE.
     """
     
-    # --- NEW ROBUST CHECK ---
+    # --- THIS IS THE CRITICAL CHECK ---
     # This check prevents the server from crashing.
     if not SENDER_EMAIL or not SENDER_PASSWORD:
         print("ERROR: SENDER_EMAIL or SENDER_PASSWORD not set in environment.")
@@ -262,7 +262,7 @@ def send_email_smtp():
             "status": "error", 
             "message": "Server error: The app owner has not configured the default sender."
         }), 500
-    # --- END NEW CHECK ---
+    # --- END CHECK ---
 
     try:
         data = request.get_json()
