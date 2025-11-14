@@ -20,8 +20,7 @@ email-generator/
 ├── app.py                # Flask backend (Auth, API routes)
 ├── .env                  # Environment variables (ALL keys)
 ├── requirements.txt      # Python dependencies
-├── OAUTH_SETUP.md        # Guide to get Google keys
-├── DEPLOYMENT_GUIDE.md   # Deployment guides
+├── OAUTH_SETUP.md # Guide to get Google keys
 ├── templates/
 │   └── index.html        # Frontend HTML
 ├── static/
