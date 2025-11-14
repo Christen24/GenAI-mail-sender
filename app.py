@@ -4,7 +4,9 @@ import re
 import json
 import base64
 import google.generativeai as genai
+import secrets # Added for state token
 from email.mime.text import MIMEText
+from urllib.parse import urlencode # Added as requested
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -50,9 +52,8 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-# For production (e.g., Render):
-# --- NOTE: This is the production-ready URL ---
-REDIRECT_URI = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:5000") + "/auth-callback"
+# Use env-driven value for REDIRECT_URI, fallback to localhost for dev
+REDIRECT_URI = os.getenv("REDIRECT_URI", "http://127.0.0.1:5000/auth-callback")
 
 # Scopes: What we are asking the user for permission to do
 SCOPES = [
@@ -69,7 +70,7 @@ client_config = {
         "client_secret": GOOGLE_CLIENT_SECRET,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [REDIRECT_URI, "http://127.0.0.1:5000/auth-callback"],
+        "redirect_uris": [REDIRECT_URI], # Use the env-driven URI
     }
 }
 
@@ -150,39 +151,32 @@ def generate_email():
 
 # --- Authentication Routes (NEW) ---
 
-def get_current_redirect_uri():
-    """Determines the correct redirect URI for the current environment."""
-    if '127.0.0.1' in request.host_url or 'localhost' in request.host_url:
-        return "http://127.0.0.1:5000/auth-callback"
-    
-    # Use Render's automatically provided external URL if available
-    render_url = os.getenv("RENDER_EXTERNAL_URL")
-    if render_url:
-        return render_url + "/auth-callback"
-    
-    # Fallback (you might need to set this manually in .env if not on Render)
-    return os.getenv("REDIRECT_URI", "http://127.0.0.1:5000/auth-callback")
+# Removed get_current_redirect_uri() as we now use the global REDIRECT_URI
 
-
-@app.route('/login')
+@app.route("/login")
 def login():
-    """Redirects the user to Google's OAuth 2.0 login page."""
-    flow = Flow.from_client_config(client_config, scopes=SCOPES)
-    
-    current_redirect_uri = get_current_redirect_uri()
-    flow.redirect_uri = current_redirect_uri
-    
-    # Enable insecure transport for HTTP (local testing)
-    if '127.0.0.1' in current_redirect_uri:
-        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        prompt='consent',
-        include_granted_scopes='true')
-    
+    """
+    Redirects the user to Google's OAuth 2.0 login page.
+    This route now manually constructs the URL as requested.
+    """
+    # Generate a state token for CSRF protection
+    state = secrets.token_urlsafe(16)
     session['state'] = state
-    return redirect(authorization_url)
+
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": REDIRECT_URI,
+        "response_type": "code",
+        "scope": " ".join(SCOPES), # Use the existing SCOPES list
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": state # Include state in the request
+    }
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
+    
+    # debug print (temporary)
+    print("DEBUG: Google auth_url redirect_uri ->", REDIRECT_URI)
+    return redirect(auth_url)
 
 @app.route('/auth-callback')
 def auth_callback():
@@ -195,10 +189,11 @@ def auth_callback():
 
     flow = Flow.from_client_config(client_config, scopes=SCOPES)
     
-    current_redirect_uri = get_current_redirect_uri()
-    flow.redirect_uri = current_redirect_uri
+    # Use the global REDIRECT_URI consistent with the /login route
+    flow.redirect_uri = REDIRECT_URI
 
-    if '127.0.0.1' in current_redirect_uri:
+    # Enable insecure transport if redirect_uri is localhost
+    if '127.0.0.1' in REDIRECT_URI or 'localhost' in REDIRECT_URI:
         os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
     try:
@@ -355,4 +350,5 @@ def send_email_oauth():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Ensure debug=False when deploying to production
+    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)), debug=True)
