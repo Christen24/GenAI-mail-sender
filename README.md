@@ -1,6 +1,6 @@
 # AI Email Assistant
 
-This is a full-stack web application that uses the Gemini AI to generate personalized emails, allows users to sign in with Google to send from their own accounts, and supports mail-merge functionality from a CSV upload.
+This is a full-stack web application that uses the Gemini AI to generate personalized emails, allows users to sign in with Google to send from their own accounts, and supports autofill of names and mail-id's functionality from a CSV upload.
 
 ## Features
 
