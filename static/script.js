@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const addRecipientBtn = document.getElementById("add-recipient-btn");
     const composeSubjectInput = document.getElementById("compose-subject");
     const composeContextInput = document.getElementById("compose-context");
-    const csvUpload = document.getElementById("csv-upload"); // NEW
+    const csvUpload = document.getElementById("csv-upload");
     
     // Reply Fields
     const replyOriginalInput = document.getElementById("reply-original");
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendSubjectInput = document.getElementById("send-subject");
     const sendRecipientsList = document.getElementById("send-recipients-list");
     const addSendRecipientBtn = document.getElementById("add-send-recipient-btn");
-    const sendCsvUpload = document.getElementById("send-csv-upload"); // NEW
+    const sendCsvUpload = document.getElementById("send-csv-upload");
 
     // --- Popup ---
     const popup = document.getElementById("popup");
@@ -244,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     addSendRecipientBtn.addEventListener("click", () => createRecipientRow(sendRecipientsList));
 
     createRecipientRow(recipientsList);
-    // FIX: Removed the stray "Address," line that was here
     createRecipientRow(sendRecipientsList);
     updateRequiredFields(currentMode);
 
@@ -463,7 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Initial Check on Page Load ---
     checkLoginStatus();
 
-    // --- NEW: CSV UPLOAD LOGIC ---
+    // --- CSV UPLOAD LOGIC ---
 
     const handleCsvUpload = (event, targetListElement) => {
         const file = event.target.files[0];
@@ -558,5 +557,38 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add event listeners for both CSV upload buttons
     csvUpload.addEventListener("change", (e) => handleCsvUpload(e, recipientsList));
     sendCsvUpload.addEventListener("change", (e) => handleCsvUpload(e, sendRecipientsList));
+
+    // --- Auth Info Modal Logic ---
+    const authInfoModal = document.getElementById("auth-info-modal");
+    const authInfoBtn = document.getElementById("oauthInfoBtn");
+    const modalCloseBtn = document.getElementById("modal-close-btn");
+
+    if (authInfoModal && authInfoBtn && modalCloseBtn) {
+        const showModal = () => {
+            authInfoModal.classList.remove("hidden");
+            feather.replace(); // Redraw close icon
+        };
+        
+        const hideModal = () => {
+            authInfoModal.classList.add("hidden");
+        };
+
+        authInfoBtn.addEventListener("click", showModal);
+        modalCloseBtn.addEventListener("click", hideModal);
+        
+        // Close when clicking the backdrop
+        authInfoModal.addEventListener("click", (e) => {
+            if (e.target === authInfoModal) {
+                hideModal();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !authInfoModal.classList.contains("hidden")) {
+                hideModal();
+            }
+        });
+    }
 
 });
