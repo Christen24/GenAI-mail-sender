@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Email Assistant</title>
+    <!-- This link MUST work. It looks for /static/style.css -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Icons (Feather) -->
     <script src="https://unpkg.com/feather-icons"></script>
 </head>
@@ -21,10 +24,16 @@
             <p>Compose new emails or reply to existing ones in seconds.</p>
             
             <!-- Auth Section -->
-            <div class="auth-container">
+            <div class="auth-container auth-row">
                 <button id="login-btn" class="btn-secondary">
                     <i data-feather="log-in"></i> Sign in with Google
                 </button>
+
+                <!-- This button opens the modal -->
+                <button id="oauthInfoBtn" class="info-btn" title="Click this">
+                    <span class="info-icon" aria-hidden="true">ℹ️</span>
+                </button>
+                
                 <div id="user-info" class="hidden">
                     <span id="user-name"></span>
                     <button id="logout-btn" class="btn-secondary">
@@ -57,13 +66,13 @@
                 <!-- Tab Content: Compose -->
                 <div id="compose-tab" class="tab-content">
                     <div class="form-group">
-                        <!-- NEW: Recipient Header -->
+                        <!-- Recipient Header -->
                         <div class="recipient-header">
                             <label>Recipients</label>
                             <label for="csv-upload" class="btn-secondary btn-small">
                                 <i data-feather="upload"></i> Upload CSV (Name & Email)
                             </label>
-                            <!-- NEW: Hidden File Input -->
+                            <!-- Hidden File Input -->
                             <input type="file" id="csv-upload" accept=".csv" class="hidden">
                         </div>
                         <div id="recipients-list">
@@ -133,13 +142,13 @@
                             <input type="text" id="send-subject" name="send-subject">
                         </div>
                         <div class="form-group">
-                             <!-- NEW: Recipient Header for Reply -->
+                             <!-- Recipient Header for Reply -->
                             <div class="recipient-header">
                                 <label>Recipients</label>
                                 <label for="send-csv-upload" class="btn-secondary btn-small">
                                     <i data-feather="upload"></i> Upload CSV (Name & Email)
                                 </label>
-                                <!-- NEW: Hidden File Input for Reply -->
+                                <!-- Hidden File Input for Reply -->
                                 <input type="file" id="send-csv-upload" accept=".csv" class="hidden">
                             </div>
                             <div id="send-recipients-list">
@@ -179,12 +188,40 @@
         </main>
     </div>
 
+    <!-- Auth Info Modal -->
+    <div id="auth-info-modal" class="modal-backdrop hidden">
+        <div class="modal-content card">
+            <button id="modal-close-btn" class="icon-btn modal-close" aria-label="Close dialog">
+                <i data-feather="x"></i>
+            </button>
+            
+            <h1>Google Sign-In Information</h1>
+            
+            <section>
+                <h2>App in Testing Mode</h2>
+                <p><strong>App in Testing:</strong> This app is currently in <em>Testing mode</em>. Only accounts added to the Google Cloud “Test users” list can sign in and send mail.</p>
+                <p>If you want your email added, please contact the developer at <a href="mailto:chrisfds2407@gmail.com">chrisfds2407@gmail.com</a>.</p>
+            </section>
+
+            <hr class="divider">
+
+            <section>
+                <h2>Required Permissions (After Login)</h2>
+                <p><strong>Important:</strong> When you authorize the app with your Google account, you MUST check the box labeled “Send email on your behalf” to permit this app to send emails.</p>
+                <!-- This link MUST work. It looks for /static/auth_scope_example.png -->
+                <img src="{{ url_for('static', filename='auth_scope_example.png') }}" alt="Google authorization screen showing 'Send email on your behalf' checkbox.">
+            </section>
+        </div>
+    </div>
+    <!-- End Auth Info Modal -->
+
     <!-- Popup Notification -->
     <div id="popup" class="popup hidden">
         <span id="popup-message"></span>
     </div>
 
     <!-- Scripts -->
+    <!-- This link MUST work. It looks for /static/script.js -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         // Apply Feather Icons
