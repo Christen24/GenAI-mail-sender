@@ -4,9 +4,9 @@ import re
 import json
 import base64
 import google.generativeai as genai
-import secrets # Added for state token
+import secrets  # Added for state token
 from email.mime.text import MIMEText
-from urllib.parse import urlencode # Added as requested
+from urllib.parse import urlencode  # Added as requested
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -36,7 +36,7 @@ try:
     if not gemini_api_key:
         raise ValueError("GEMINI_API_KEY not found.")
     genai.configure(api_key=gemini_api_key)
-    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash') # Using 1.5-flash
     print("Gemini client initialized successfully.")
 except Exception as e:
     print(f"Error initializing Gemini client: {e}")
@@ -70,7 +70,7 @@ client_config = {
         "client_secret": GOOGLE_CLIENT_SECRET,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [REDIRECT_URI], # Use the env-driven URI
+        "redirect_uris": [REDIRECT_URI],  # Use the env-driven URI
     }
 }
 
@@ -138,7 +138,7 @@ def generate_email():
         email_content = response.text.strip()
         
         if not email_content:
-             raise Exception("Received empty response from Gemini (possibly due to safety filters).")
+            raise Exception("Received empty response from Gemini (possibly due to safety filters).")
 
         return jsonify({"generated_email": email_content})
 
@@ -150,8 +150,6 @@ def generate_email():
         return jsonify({"generated_email": fallback_email, "warning": f"AI Error: {str(e)}"}), 200
 
 # --- Authentication Routes (NEW) ---
-
-# Removed get_current_redirect_uri() as we now use the global REDIRECT_URI
 
 @app.route("/login")
 def login():
@@ -167,10 +165,10 @@ def login():
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": REDIRECT_URI,
         "response_type": "code",
-        "scope": " ".join(SCOPES), # Use the existing SCOPES list
+        "scope": " ".join(SCOPES),  # Use the existing SCOPES list
         "access_type": "offline",
         "prompt": "consent",
-        "state": state # Include state in the request
+        "state": state  # Include state in the request
     }
     auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
     
@@ -266,7 +264,7 @@ def send_email_smtp():
         template_body = data.get('body')
 
         if not recipients or not subject or not template_body:
-             return jsonify({"status": "error", "message": "Missing recipients, subject, or body."}), 400
+            return jsonify({"status": "error", "message": "Missing recipients, subject, or body."}), 400
 
         # Start the server connection once
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
@@ -316,7 +314,7 @@ def send_email_oauth():
         template_body = data.get('body')
 
         if not recipients or not subject or not template_body:
-             return jsonify({"status": "error", "message": "Missing recipients, subject, or body."}), 400
+            return jsonify({"status": "error", "message": "Missing recipients, subject, or body."}), 400
 
         # Loop through each recipient and send a personalized email
         for recipient in recipients:
