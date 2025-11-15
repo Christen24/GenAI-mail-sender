@@ -36,7 +36,7 @@ try:
     if not gemini_api_key:
         raise ValueError("GEMINI_API_KEY not found.")
     genai.configure(api_key=gemini_api_key)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash') # Using 1.5-flash
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash') # Using 1.5-flash
     print("Gemini client initialized successfully.")
 except Exception as e:
     print(f"Error initializing Gemini client: {e}")
